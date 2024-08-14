@@ -43,14 +43,13 @@ app.post('/api/register', async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     console.log('Request body:', req.body);
-    console.log('Password:', password);
-    console.log('Salt:', salt);
+
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const user = new User({ fullName, email, password: hashedPassword });
     await user.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: 'User registered successfully', userId: user.id });
   } catch (err) {
     console.error('Error during registration: ', err);
     res.status(500).json({ message: 'Server error' });
@@ -82,17 +81,23 @@ app.post('/api/login', async (req, res) => {
 
 // Pet Biodata
 app.post('/api/petbio', async (req, res) => {
+  console.log('Request body:', req.body)
   const { userId, petType, gender, numberOfPets, age, expense } = req.body;
 
-  try{
+  try {
+    if (!userId || !petType || !gender || !numberOfPets || !age || !expense) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
     const petBio = new Pet({ userId, petType, gender, numberOfPets, age, expense });
     await petBio.save();
 
     res.status(201).json({ message: 'Pet biodata saved successfully' });
-  }catch (err) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    console.error('Error during saving pet biodata:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
-})
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

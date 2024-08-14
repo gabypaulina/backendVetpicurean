@@ -7,7 +7,7 @@ const PetBioSchema = new mongoose.Schema({
     require: true
   },
   petType: { 
-    type: String, 
+    type: [String], 
     required: true
   },
   gender: { 
