@@ -26,6 +26,10 @@ const PetBioSchema = new mongoose.Schema({
     type: String, 
     required: true
   },
+  petDescription : {
+    type : String,
+    required: true
+  }
 });
 
 module.exports = mongoose.model('PetBio', PetBioSchema);

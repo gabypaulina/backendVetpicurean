@@ -82,14 +82,14 @@ app.post('/api/login', async (req, res) => {
 // Pet Biodata
 app.post('/api/petbio', async (req, res) => {
   console.log('Request body:', req.body)
-  const { userId, petType, gender, numberOfPets, age, expense } = req.body;
+  const { userId, petType, gender, numberOfPets, age, expense, petDescription } = req.body;
 
   try {
-    if (!userId || !petType || !gender || !numberOfPets || !age || !expense) {
+    if (!userId || !petType || !gender || !numberOfPets || !age || !expense || !petDescription) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    const petBio = new Pet({ userId, petType, gender, numberOfPets, age, expense });
+    const petBio = new Pet({ userId, petType, gender, numberOfPets, age, expense, petDescription });
     await petBio.save();
 
     res.status(201).json({ message: 'Pet biodata saved successfully' });
