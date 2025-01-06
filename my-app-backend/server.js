@@ -47,50 +47,18 @@ mongoose.connect('mongodb://127.0.0.1:27017/vetapp', {
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-const exportDataToExcel = async (user, petBio) => {
-  const workbook = new ExcelJS.Workbook()
-  const worksheet = workbook.addWorksheet('User Data')
-  
-  worksheet.columns = [
-    {header: 'Full Name', key: 'fullName', width: 30},
-    {header: 'Email', key: 'email', width: 30},
-    {header: 'Pet Type', key: 'petType', width: 30},
-    {header: 'Gender', key: 'gender', width: 30},
-    {header: 'Number of Pets', key: 'numberOfPets', width: 30},
-    {header: 'Age', key: 'age', width: 30},
-    {header: 'Expense', key: 'expense', width: 30},
-    {header: 'Pet Description', key: 'petDescription', width: 30},
-
-  ]
-  
-  worksheet.addRow({
-    fullName: user.fullName,
-    email: user.email,
-    petType: Pet.petType.join(','),
-    gender: Pet.gender,
-    numberOfPets: Pet.numberOfPets,
-    age: Pet.age,
-    expense: Pet.expense,
-    petDescription: Pet.petDescription
-  })
-
-  await workbook.xlsx.writeFile(`./exports/User_DAta${user.email}.xlsx`)
-}
-
 // Register
 app.post('/api/register', async (req, res) => {
   const { fullName, email, password, confirmPassword } = req.body;
   console.log("Request body: ", req.body)
-
-  if (!fullName || !email || !password || !confirmPassword) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ message: 'Passwords do not match' });
-  }
-
   try {
+    if (!fullName || !email || !password || !confirmPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: 'Passwords do not match' });
+    }
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
@@ -103,20 +71,6 @@ app.post('/api/register', async (req, res) => {
 
     const user = new User({ fullName, email, password: hashedPassword });
     await user.save();
-
-    const petBio = new Pet({
-      userId: user._id,
-      petType,
-      gender,
-      numberOfPets,
-      age,
-      expense,
-      petDescription,
-    });
-    await petBio.save();
-
-    await exportDataToExcel(user, petBio)
-
 
     res.status(201).json({ message: 'User registered successfully', userId: user.id });
   } catch (err) {
@@ -321,6 +275,24 @@ app.get('/api/articles/date-range', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
 });
+
+app.get('/download-excel', (req,res) => {
+  const exportFolder = path.join(__dirname, 'exports');
+  const fileName = 'User_Pet_Data.xlsx'
+  const filePath = path.join(exportFolder, fileName)
+
+  if(fs.existsSync(filePath)){
+    res.download(filePath, (err) => {
+      if (err){
+        console.error('Error downloading file: ', err);
+        res.status(500).send('Error downloading file')
+      }
+    })
+  }else{
+    res.status(404).send('File not found')
+  }
+  
+})
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
